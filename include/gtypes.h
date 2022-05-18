@@ -22,6 +22,9 @@ typedef uint_fast16_t u16f;
 typedef uint_fast32_t u32f;
 typedef uint_fast64_t u64f;
 
+typedef float f32;
+typedef double f64;
+
 typedef uint_fast8_t b8;
 
 #endif //GTYPES_H
