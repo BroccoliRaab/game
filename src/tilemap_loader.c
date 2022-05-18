@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "gtypes.h"
+
 #include "tilemap_loader.h"
 
 u32f load_tilemap(FILE * file, i32f * buffer, u32f buff_sz){
@@ -21,7 +22,6 @@ u32f load_tilemap(FILE * file, i32f * buffer, u32f buff_sz){
             fseek(file, 1, SEEK_CUR);
             break;
         default:
-            //TODO: LOGGER?
             fputs("Impossible fscanf return value reached. Undefined behavior!", stderr);
             break;
         }
