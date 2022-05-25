@@ -3,7 +3,8 @@ CC?=clang
 SRC=src/*
 GAME=game
 
-LIBS!=sdl2-config --cflags --libs
+SDL_LIBS!=sdl2-config --cflags --libs
+LIBS=-lm $(SDL_LIBS)
 INCLUDE=-Iinclude
 
 $(GAME): $(SRC)

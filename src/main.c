@@ -2,6 +2,8 @@
 
 #include <SDL2/SDL.h>
 
+#include <math.h>
+
 #include "gtypes.h"
 #include "tilemap_loader.h"
 
@@ -17,9 +19,39 @@
     }
 
 int main(void) {
-    int buffer[256];
-    FILE * f =fopen("assets/tilemap/test1.csv", "r");
-    FATAL(!f, "Failed to open tilemap", ERROR);
+    //i32f buffer[100];
+    //FILE * f =fopen("assets/tilemap/test1.csv", "r");
+    //FATAL(!f, "Failed to open tilemap", ERROR);
+
+    const i32f mapdim = 24;
+
+    i32f buffer[]={
+        
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,0,0,0,0,0,2,2,2,2,2,0,0,0,0,3,0,3,0,3,0,0,0,1,
+  1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,3,0,0,0,3,0,0,0,1,
+  1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,0,0,0,0,0,2,2,0,2,2,0,0,0,0,3,0,3,0,3,0,0,0,1,
+  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,4,4,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,4,0,4,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,4,0,0,0,0,5,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,4,0,4,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,4,0,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,4,4,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+};
 
     i32f sdl_init_retval = SDL_Init(SDL_INIT_EVERYTHING);
     FATAL(sdl_init_retval<0, "Failed to initialize SDL", ERROR);
@@ -31,20 +63,72 @@ int main(void) {
     SDL_Renderer * renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
     FATAL(!renderer, "Failed to create renderer", ERR_WIN);
 
-    u32f tiles = load_tilemap(f, buffer, 256);
+    //u32f tiles = load_tilemap(f, buffer, 256);
     
     f64 posx = 5;
     f64 posy = 5;
-    f64 dirx = 0;
+    f64 dirx = -1;
     f64 diry = 0;
     f64 planex = 0;
     f64 planey = 0.66;
+
+    f64 movespeed = 0.0;
+    f64 rotspeed = 0.0;
     
     u64f last_frame = SDL_GetTicks64();
+    b8 loop = 1;
+    while (loop){
+        u64f curr_frame = SDL_GetTicks64();
+        f64 dt = (curr_frame - last_frame) /1000.0;
+        if (dt>0)
+            last_frame = curr_frame;
+        movespeed = dt * 5.0;
+        rotspeed = dt * 3.0;
+        printf("X: %lf, Y: %lf\n", posx, posy);
+        SDL_Event event;
+        while (SDL_PollEvent(&event)){
+            switch (event.type){
+                case SDL_QUIT:
+                    loop = 0;
+                    break;
+                case SDL_KEYDOWN:
+                    switch(event.key.keysym.scancode){
+                        case SDL_SCANCODE_UP:
+                            posx +=dirx *movespeed;
+                            posy +=diry *movespeed;
+                            break;
+                        case SDL_SCANCODE_DOWN:
+                            posx -= dirx *movespeed;
+                            posy -= diry *movespeed;
+                            break;
 
-    while (1){
+                        case SDL_SCANCODE_RIGHT:
+                            {
+                                f64 olddirx =dirx;
+                                dirx = dirx * cos(-rotspeed) -diry*sin(-rotspeed);
+                                diry = olddirx * sin(-rotspeed) +diry*cos(-rotspeed);
+                                f64 oldplanex = planex;
+                                planex = planex * cos(-rotspeed) - planey * sin(-rotspeed);
+                                planey = oldplanex * sin(-rotspeed) + planey * cos(-rotspeed);
+                            }
+                            break;
+                        case SDL_SCANCODE_LEFT:
+                            {
+                                f64 olddirx =dirx;
+                                dirx = dirx * cos(rotspeed) -diry*sin(rotspeed);
+                                diry = olddirx * sin(rotspeed) +diry*cos(rotspeed);
+                                f64 oldplanex = planex;
+                                planex = planex * cos(rotspeed) - planey * sin(rotspeed);
+                                planey = oldplanex * sin(rotspeed) + planey * cos(rotspeed);
+                            }
+                            break;
+                            
+                    }
+                break;
+            }
+        }
         for (i32f x =0; x<SCREEN_WIDTH; x++){
-            f64 camx =2 *x/(f64)SCREEN_WIDTH-1;
+            f64 camx =2 * (f64)x/(f64)SCREEN_WIDTH-1;
             f64 raydirx = dirx +planex *camx;
             f64 raydiry = diry +planey * camx;
             
@@ -90,7 +174,7 @@ int main(void) {
                     mapy += stepy;
                     side = 1;
                 }
-                if (buffer[mapy*10+mapx]>0) hit =1;
+                if (buffer[mapy*mapdim+mapx]>0) hit =1;
             } 
             f64 perpwalldist;
             if (side == 0) {
@@ -104,10 +188,12 @@ int main(void) {
             if (drawstart <0) drawstart =0;
             i32f drawend = lineheight /2 + SCREEN_HEIGHT/2;
             if(drawend >=SCREEN_HEIGHT) drawend = SCREEN_HEIGHT-1;
-            SDL_SetRenderDrawColor(renderer, 200,0,0,255);
+            SDL_SetRenderDrawColor(renderer, (side?100:200),0,0,255);
             i32f drawline_retval = SDL_RenderDrawLine(renderer, x, drawstart, x, drawend);
         }
-    SDL_RenderPresent(renderer);
+        SDL_RenderPresent(renderer);
+        SDL_SetRenderDrawColor(renderer, 0,0,0,255);
+        SDL_RenderClear(renderer);
     }
 
     return 0;
