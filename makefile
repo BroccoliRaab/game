@@ -4,7 +4,7 @@ SRC=src/*
 GAME=game
 
 SDL_LIBS!=sdl2-config --cflags --libs
-LIBS=-lm $(SDL_LIBS)
+LIBS=-lm $(SDL_LIBS) -lSDL2_ttf
 CFLAGS?=-std=c17 -Wall -pedantic -Werror
 INCLUDE=-Iinclude
 

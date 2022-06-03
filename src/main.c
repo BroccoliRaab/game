@@ -1,8 +1,8 @@
 #include <stdio.h>
+#include <math.h>
 
 #include <SDL2/SDL.h>
-
-#include <math.h>
+#include <SDL_ttf.h>
 
 #include "gtypes.h"
 #include "tilemap_loader.h"
@@ -41,15 +41,20 @@ int main(void) {
 
     i32f sdl_init_retval = SDL_Init(SDL_INIT_EVERYTHING);
     FATAL(sdl_init_retval<0, "Failed to initialize SDL", ERROR);
-
+    
+    i32f ttf_init_retval = TTF_Init();
+    FATAL(ttf_init_retval<0, "Failed to initize TTF", ERROR);
 
     SDL_Window * win = SDL_CreateWindow(TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
-    FATAL(!win, "Failed to create window", ERROR);
+    FATAL(!win, "Failed to create window", ERR_TTF);
 
     SDL_Renderer * renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
     FATAL(!renderer, "Failed to create renderer", ERR_WIN);
 
     u32f tiles = load_tilemap(f, buffer, 100);
+
+    TTF_Font *font = TTF_OpenFont("assets/font/sans.ttf", 25);
+
     Camera main_camera;
     
     main_camera.pos_x = 1.1;
@@ -61,6 +66,9 @@ int main(void) {
 
     f64 movespeed = 0.0;
     f64 rotspeed = 0.0;
+
+    SDL_Surface *fps_counter;
+    SDL_Surface *position_display;
 
     u64f last_frame = SDL_GetTicks64();
     b8 loop = 1;
@@ -81,12 +89,45 @@ int main(void) {
         }
         move_player(&main_camera, buffer, movespeed, rotspeed);
         draw_walls(&main_camera, renderer, buffer);
+
+        char fps_str[20];
+        char pos_str[25];
+        sprintf(fps_str, "FPS: %.5lf", 1.0/dt);
+        sprintf(pos_str, "X: %.5lf Y: %.5lf", main_camera.pos_x, main_camera.pos_y);
+
+        fps_counter = TTF_RenderText_Solid(font,  fps_str, (SDL_Color){0xFF,0xFF,0xFF});
+        SDL_Texture *fps_counter_texture = SDL_CreateTextureFromSurface(renderer, fps_counter);
+        SDL_Rect counter_rect = (SDL_Rect) {0,0,fps_counter->w, fps_counter->h};
+
+        position_display = TTF_RenderText_Solid(font,  pos_str, (SDL_Color){0xFF,0xFF,0xFF});
+
+        SDL_Texture *position_display_texture = SDL_CreateTextureFromSurface(renderer, position_display);
+        SDL_Rect position_rect = (SDL_Rect) {0, fps_counter->h+5, position_display->w, position_display->h};
+
+        SDL_RenderCopy(renderer, fps_counter_texture, NULL, &counter_rect);
+        SDL_RenderCopy(renderer, position_display_texture, NULL, &position_rect);
+
+        SDL_RenderPresent(renderer);
+        SDL_RenderClear(renderer);
+
+        SDL_DestroyTexture(position_display_texture);
+        SDL_FreeSurface(position_display);
+        SDL_DestroyTexture(fps_counter_texture);
+        SDL_FreeSurface(fps_counter);
     }
+
+    TTF_CloseFont(font);
+    SDL_DestroyRenderer(renderer);
+    TTF_Quit();
+    SDL_Quit();
     return 0;
+
+
 
 ERR_WIN:
     SDL_DestroyWindow(win);
-
+ERR_TTF:
+    TTF_Quit();
 ERROR:
     SDL_Quit();
     return 1;
@@ -189,10 +230,8 @@ void draw_walls(Camera *cam,SDL_Renderer *renderer, i32f map[100]){
         if(line_end >=SCREEN_HEIGHT) line_end = SCREEN_HEIGHT-1;
         SDL_SetRenderDrawColor(renderer, (side?100:200),0,0,255);
         i32f drawline_retval = SDL_RenderDrawLine(renderer, x, line_start, x, line_end);
+        SDL_SetRenderDrawColor(renderer, 0,0,0,255);
     }
-    SDL_RenderPresent(renderer);
-    SDL_SetRenderDrawColor(renderer, 0,0,0,255);
-    SDL_RenderClear(renderer);
 }
 
 
