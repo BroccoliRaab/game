@@ -28,8 +28,9 @@ typedef struct Camera {
 }Camera;
 
 
-void move_player(Camera *cam, f64 movespeed, f64 rotspeed);
+void move_player(Camera *cam, i32f map[100], f64 movespeed, f64 rotspeed);
 void draw_walls(Camera *cam,SDL_Renderer *renderer, i32f map[100]);
+i32f tile_from_position(i32f map[100], i32f pos_x, i32f pos_y);
 
 int main(void) {
     i32f buffer[100];
@@ -48,11 +49,11 @@ int main(void) {
     SDL_Renderer * renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
     FATAL(!renderer, "Failed to create renderer", ERR_WIN);
 
-    //u32f tiles = load_tilemap(f, buffer, 256);
+    u32f tiles = load_tilemap(f, buffer, 100);
     Camera main_camera;
     
-    main_camera.pos_x = 5;
-    main_camera.pos_y = 5;
+    main_camera.pos_x = 1.1;
+    main_camera.pos_y = 5.1;
     main_camera.dir_x = -1;
     main_camera.dir_y = 0;
     main_camera.plane_x = 0;
@@ -78,7 +79,7 @@ int main(void) {
                     break;
             }
         }
-        move_player(&main_camera, movespeed, rotspeed);
+        move_player(&main_camera, buffer, movespeed, rotspeed);
         draw_walls(&main_camera, renderer, buffer);
     }
     return 0;
@@ -90,16 +91,22 @@ ERROR:
     SDL_Quit();
     return 1;
 }
-void move_player(Camera *cam, f64 movespeed, f64 rotspeed){
+void move_player(Camera *cam, i32f map[100], f64 movespeed, f64 rotspeed){
     f64 pos_x =0;
     f64 pos_y =0;
     const u8 *keyboard = SDL_GetKeyboardState(NULL);
     if(keyboard[SDL_SCANCODE_UP]){
-        pos_x = cam->dir_x*movespeed, 
+        pos_x = cam->dir_x*movespeed; 
         pos_y = cam->dir_y*movespeed;
     }else if(keyboard[SDL_SCANCODE_DOWN]){
         pos_x = -cam->dir_x*movespeed;
         pos_y = -cam->dir_y*movespeed;
+    }
+    if(tile_from_position(map, (i32f) cam->pos_x+pos_x, (i32f) cam->pos_y)>-1){
+        pos_x =0;
+    }
+    if(tile_from_position(map, (i32f) cam->pos_x, (i32f) cam->pos_y+pos_y)>-1){
+        pos_y =0;
     }
     if(keyboard[SDL_SCANCODE_RIGHT]) {
         f64 old_dir_x =cam->dir_x;
@@ -168,7 +175,7 @@ void draw_walls(Camera *cam,SDL_Renderer *renderer, i32f map[100]){
                 map_y += stepy;
                 side = 1;
             }
-            if (map[map_y*10+map_x]>0) hit = 1;
+            if (tile_from_position(map, map_x, map_y)>0) hit = 1;
         } 
         f64 wall_dist;
         if (side == 0) {
@@ -192,3 +199,6 @@ void draw_walls(Camera *cam,SDL_Renderer *renderer, i32f map[100]){
 
 
 
+i32f tile_from_position(i32f map[100],i32f pos_x, i32f pos_y){
+    return map[pos_y*10+pos_x];
+}
