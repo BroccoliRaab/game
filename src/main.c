@@ -48,7 +48,7 @@ int main(void) {
     SDL_Window * win = SDL_CreateWindow(TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
     FATAL(!win, "Failed to create window", ERR_TTF);
 
-    SDL_Renderer * renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
+    SDL_Renderer * renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
     FATAL(!renderer, "Failed to create renderer", ERR_WIN);
 
     u32f tiles = load_tilemap(f, buffer, 100);
