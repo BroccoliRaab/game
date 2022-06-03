@@ -28,7 +28,7 @@ typedef struct Camera {
 }Camera;
 
 
-void move_player(Camera *cam, f64 pos_x, f64 pos_y);
+void move_player(Camera *cam, f64 movespeed, f64 rotspeed);
 void draw_walls(Camera *cam,SDL_Renderer *renderer, i32f map[100]);
 
 int main(void) {
@@ -67,8 +67,8 @@ int main(void) {
         u64f curr_frame = SDL_GetTicks64();
         f64 dt = (curr_frame - last_frame) /1000.0;
         last_frame = curr_frame;
-        movespeed = dt * 5.0;
-        rotspeed = dt * 3.0;
+        movespeed = dt * 3.0;
+        rotspeed = dt * 2.0;
         printf("FPS: %lf\n", 1.0/dt);
         SDL_Event event;
         while (SDL_PollEvent(&event)){
@@ -76,40 +76,9 @@ int main(void) {
                 case SDL_QUIT:
                     loop = 0;
                     break;
-                case SDL_KEYDOWN:
-                    switch(event.key.keysym.sym){
-                        case SDLK_UP:
-                            move_player(&main_camera, main_camera.dir_x*movespeed, main_camera.dir_y*movespeed);
-                            break;
-                        case SDLK_DOWN:
-                            move_player(&main_camera, -main_camera.dir_x*movespeed, -main_camera.dir_y*movespeed);
-                            break;
-
-                        case SDLK_RIGHT:
-                            {
-                                f64 old_dir_x =main_camera.dir_x;
-                                main_camera.dir_x = main_camera.dir_x * cos(-rotspeed) -main_camera.dir_y*sin(-rotspeed);
-                                main_camera.dir_y = old_dir_x * sin(-rotspeed) +main_camera.dir_y*cos(-rotspeed);
-                                f64 old_plane_x = main_camera.plane_x;
-                                main_camera.plane_x = main_camera.plane_x * cos(-rotspeed) - main_camera.plane_y * sin(-rotspeed);
-                                main_camera.plane_y = old_plane_x * sin(-rotspeed) + main_camera.plane_y * cos(-rotspeed);
-                            }
-                            break;
-                        case SDLK_LEFT:
-                            {
-                                f64 old_dir_x =main_camera.dir_x;
-                                main_camera.dir_x = main_camera.dir_x * cos(rotspeed) -main_camera.dir_y*sin(rotspeed);
-                                main_camera.dir_y = old_dir_x * sin(rotspeed) +main_camera.dir_y*cos(rotspeed);
-                                f64 old_plane_x = main_camera.plane_x;
-                                main_camera.plane_x = main_camera.plane_x * cos(rotspeed) - main_camera.plane_y * sin(rotspeed);
-                                main_camera.plane_y = old_plane_x * sin(rotspeed) + main_camera.plane_y * cos(rotspeed);
-                            }
-                            break;
-                            
-                    }
-                break;
             }
         }
+        move_player(&main_camera, movespeed, rotspeed);
         draw_walls(&main_camera, renderer, buffer);
     }
     return 0;
@@ -121,7 +90,33 @@ ERROR:
     SDL_Quit();
     return 1;
 }
-void move_player(Camera *cam, f64 pos_x, f64 pos_y){
+void move_player(Camera *cam, f64 movespeed, f64 rotspeed){
+    f64 pos_x =0;
+    f64 pos_y =0;
+    const u8 *keyboard = SDL_GetKeyboardState(NULL);
+    if(keyboard[SDL_SCANCODE_UP]){
+        pos_x = cam->dir_x*movespeed, 
+        pos_y = cam->dir_y*movespeed;
+    }else if(keyboard[SDL_SCANCODE_DOWN]){
+        pos_x = -cam->dir_x*movespeed;
+        pos_y = -cam->dir_y*movespeed;
+    }
+    if(keyboard[SDL_SCANCODE_RIGHT]) {
+        f64 old_dir_x =cam->dir_x;
+        cam->dir_x = cam->dir_x * cos(-rotspeed) -cam->dir_y*sin(-rotspeed);
+        cam->dir_y = old_dir_x * sin(-rotspeed) +cam->dir_y*cos(-rotspeed);
+        f64 old_plane_x = cam->plane_x;
+        cam->plane_x = cam->plane_x * cos(-rotspeed) - cam->plane_y * sin(-rotspeed);
+        cam->plane_y = old_plane_x * sin(-rotspeed) + cam->plane_y * cos(-rotspeed);
+    }else if(keyboard[SDL_SCANCODE_LEFT]){
+        f64 old_dir_x =cam->dir_x;
+        cam->dir_x = cam->dir_x * cos(rotspeed) -cam->dir_y*sin(rotspeed);
+        cam->dir_y = old_dir_x * sin(rotspeed) +cam->dir_y*cos(rotspeed);
+        f64 old_plane_x = cam->plane_x;
+        cam->plane_x = cam->plane_x * cos(rotspeed) - cam->plane_y * sin(rotspeed);
+        cam->plane_y = old_plane_x * sin(rotspeed) + cam->plane_y * cos(rotspeed);
+    }
+
     cam->pos_x+= pos_x;
     cam->pos_y+= pos_y;
 }
