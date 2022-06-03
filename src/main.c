@@ -133,8 +133,8 @@ ERROR:
     return 1;
 }
 void move_player(Camera *cam, i32f map[100], f64 movespeed, f64 rotspeed){
-    f64 pos_x =0;
-    f64 pos_y =0;
+    f64 pos_x =0.0;
+    f64 pos_y =0.0;
     const u8 *keyboard = SDL_GetKeyboardState(NULL);
     if(keyboard[SDL_SCANCODE_UP]){
         pos_x = cam->dir_x*movespeed; 
@@ -143,11 +143,11 @@ void move_player(Camera *cam, i32f map[100], f64 movespeed, f64 rotspeed){
         pos_x = -cam->dir_x*movespeed;
         pos_y = -cam->dir_y*movespeed;
     }
-    if(tile_from_position(map, (i32f) cam->pos_x+pos_x, (i32f) cam->pos_y)>-1){
-        pos_x =0;
+    if(tile_from_position(map, (i32f) (cam->pos_x+pos_x), (i32f) (cam->pos_y))>-1){
+        pos_x =0.0;
     }
-    if(tile_from_position(map, (i32f) cam->pos_x, (i32f) cam->pos_y+pos_y)>-1){
-        pos_y =0;
+    if(tile_from_position(map, (i32f) (cam->pos_x), (i32f) (cam->pos_y+pos_y))>-1){
+        pos_y =0.0;
     }
     if(keyboard[SDL_SCANCODE_RIGHT]) {
         f64 old_dir_x =cam->dir_x;
