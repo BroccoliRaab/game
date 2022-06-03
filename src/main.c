@@ -18,6 +18,16 @@
         goto label;                     \
     }
 
+typedef struct Camera {
+    f64 pos_x;
+    f64 pos_y;
+    f64 dir_x;
+    f64 dir_y;
+    f64 plane_x;
+    f64 plane_y;
+}Camera;
+
+
 int main(void) {
     i32f buffer[100];
     FILE * f =fopen("assets/tilemap/test1.csv", "r");
@@ -36,13 +46,14 @@ int main(void) {
     FATAL(!renderer, "Failed to create renderer", ERR_WIN);
 
     //u32f tiles = load_tilemap(f, buffer, 256);
-
-    f64 posx = 5;
-    f64 posy = 5;
-    f64 dirx = -1;
-    f64 diry = 0;
-    f64 planex = 0;
-    f64 planey = 0.66;
+    Camera main_camera;
+    
+    main_camera.pos_x = 5;
+    main_camera.pos_y = 5;
+    main_camera.dir_x = -1;
+    main_camera.dir_y = 0;
+    main_camera.plane_x = 0;
+    main_camera.plane_y = 0.66;
 
     f64 movespeed = 0.0;
     f64 rotspeed = 0.0;
@@ -65,32 +76,32 @@ int main(void) {
                 case SDL_KEYDOWN:
                     switch(event.key.keysym.scancode){
                         case SDL_SCANCODE_UP:
-                            posx +=dirx *movespeed;
-                            posy +=diry *movespeed;
+                            main_camera.pos_x +=main_camera.dir_x *movespeed;
+                            main_camera.pos_y +=main_camera.dir_y *movespeed;
                             break;
                         case SDL_SCANCODE_DOWN:
-                            posx -= dirx *movespeed;
-                            posy -= diry *movespeed;
+                            main_camera.pos_x -= main_camera.dir_x *movespeed;
+                            main_camera.pos_y -= main_camera.dir_y *movespeed;
                             break;
 
                         case SDL_SCANCODE_RIGHT:
                             {
-                                f64 olddirx =dirx;
-                                dirx = dirx * cos(-rotspeed) -diry*sin(-rotspeed);
-                                diry = olddirx * sin(-rotspeed) +diry*cos(-rotspeed);
-                                f64 oldplanex = planex;
-                                planex = planex * cos(-rotspeed) - planey * sin(-rotspeed);
-                                planey = oldplanex * sin(-rotspeed) + planey * cos(-rotspeed);
+                                f64 old_dir_x =main_camera.dir_x;
+                                main_camera.dir_x = main_camera.dir_x * cos(-rotspeed) -main_camera.dir_y*sin(-rotspeed);
+                                main_camera.dir_y = old_dir_x * sin(-rotspeed) +main_camera.dir_y*cos(-rotspeed);
+                                f64 old_plane_x = main_camera.plane_x;
+                                main_camera.plane_x = main_camera.plane_x * cos(-rotspeed) - main_camera.plane_y * sin(-rotspeed);
+                                main_camera.plane_y = old_plane_x * sin(-rotspeed) + main_camera.plane_y * cos(-rotspeed);
                             }
                             break;
                         case SDL_SCANCODE_LEFT:
                             {
-                                f64 olddirx =dirx;
-                                dirx = dirx * cos(rotspeed) -diry*sin(rotspeed);
-                                diry = olddirx * sin(rotspeed) +diry*cos(rotspeed);
-                                f64 oldplanex = planex;
-                                planex = planex * cos(rotspeed) - planey * sin(rotspeed);
-                                planey = oldplanex * sin(rotspeed) + planey * cos(rotspeed);
+                                f64 old_dir_x =main_camera.dir_x;
+                                main_camera.dir_x = main_camera.dir_x * cos(rotspeed) -main_camera.dir_y*sin(rotspeed);
+                                main_camera.dir_y = old_dir_x * sin(rotspeed) +main_camera.dir_y*cos(rotspeed);
+                                f64 old_plane_x = main_camera.plane_x;
+                                main_camera.plane_x = main_camera.plane_x * cos(rotspeed) - main_camera.plane_y * sin(rotspeed);
+                                main_camera.plane_y = old_plane_x * sin(rotspeed) + main_camera.plane_y * cos(rotspeed);
                             }
                             break;
                             
@@ -100,17 +111,17 @@ int main(void) {
         }
         for (i32f x =0; x<SCREEN_WIDTH; x++){
             f64 camx =2 * (f64)x/(f64)SCREEN_WIDTH-1;
-            f64 raydirx = dirx +planex *camx;
-            f64 raydiry = diry +planey * camx;
+            f64 ray_dir_x = main_camera.dir_x +main_camera.plane_x *camx;
+            f64 ray_dir_y = main_camera.dir_y +main_camera.plane_y * camx;
             
-            i32f mapx = (i32f) posx;
-            i32f mapy = (i32f) posy;
+            i32f mapx = (i32f) main_camera.pos_x;
+            i32f mapy = (i32f) main_camera.pos_y;
 
             f64 sidedistx;
             f64 sidedisty;
 
-            f64 deltadistx = (raydirx == 0)? 1e30 : fabs(1.0/raydirx);
-            f64 deltadisty = (raydiry == 0)? 1e30 : fabs(1.0/raydiry);
+            f64 deltadistx = (ray_dir_x == 0)? 1e30 : fabs(1.0/ray_dir_x);
+            f64 deltadisty = (ray_dir_y == 0)? 1e30 : fabs(1.0/ray_dir_y);
 
             i32f stepy, stepx;
 
@@ -118,21 +129,21 @@ int main(void) {
 
             i8f side;
 
-            if (raydirx<0) {
+            if (ray_dir_x<0) {
                 stepx =-1;
-                sidedistx = (posx -mapx) *deltadistx;
+                sidedistx = (main_camera.pos_x -mapx) *deltadistx;
 
             }else{
                 stepx =1;
-                sidedistx = (mapx + 1.0 -posx) *deltadistx;
+                sidedistx = (mapx + 1.0 -main_camera.pos_x) *deltadistx;
             }
-            if (raydiry<0) {
+            if (ray_dir_y<0) {
                 stepy =-1;
-                sidedisty = (posy -mapy) *deltadisty;
+                sidedisty = (main_camera.pos_y -mapy) *deltadisty;
 
             }else{
                 stepy =1;
-                sidedisty = (mapy + 1.0 -posy) *deltadisty;
+                sidedisty = (mapy + 1.0 -main_camera.pos_y) *deltadisty;
             }
 
             while(!hit){
