@@ -127,18 +127,18 @@ void move_player(Camera *cam, f64 pos_x, f64 pos_y){
 }
 void draw_walls(Camera *cam,SDL_Renderer *renderer, i32f map[100]){
     for (i32f x =0; x<SCREEN_WIDTH; x++){
-        f64 camx =2 * (f64)x/(f64)SCREEN_WIDTH-1;
-        f64 ray_dir_x = cam->dir_x +cam->plane_x *camx;
-        f64 ray_dir_y = cam->dir_y +cam->plane_y * camx;
+        f64 cam_x =2 * (f64)x/(f64)SCREEN_WIDTH-1;
+        f64 ray_dir_x = cam->dir_x +cam->plane_x *cam_x;
+        f64 ray_dir_y = cam->dir_y +cam->plane_y * cam_x;
 
-        i32f mapx = (i32f) cam->pos_x;
-        i32f mapy = (i32f) cam->pos_y;
+        i32f map_x = (i32f) cam->pos_x;
+        i32f map_y = (i32f) cam->pos_y;
 
-        f64 sidedistx;
-        f64 sidedisty;
+        f64 side_dist_x;
+        f64 side_dist_y;
 
-        f64 deltadistx = (ray_dir_x == 0)? 1e30 : fabs(1.0/ray_dir_x);
-        f64 deltadisty = (ray_dir_y == 0)? 1e30 : fabs(1.0/ray_dir_y);
+        f64 delta_dist_x = (ray_dir_x == 0)? 1e30 : fabs(1.0/ray_dir_x);
+        f64 delta_dist_y = (ray_dir_y == 0)? 1e30 : fabs(1.0/ray_dir_y);
 
         i32f stepy, stepx;
 
@@ -148,47 +148,47 @@ void draw_walls(Camera *cam,SDL_Renderer *renderer, i32f map[100]){
 
         if (ray_dir_x<0) {
             stepx =-1;
-            sidedistx = (cam->pos_x -mapx) *deltadistx;
+            side_dist_x = (cam->pos_x -map_x) *delta_dist_x;
 
         }else{
             stepx =1;
-            sidedistx = (mapx + 1.0 -cam->pos_x) *deltadistx;
+            side_dist_x = (map_x + 1.0 -cam->pos_x) *delta_dist_x;
         }
         if (ray_dir_y<0) {
             stepy =-1;
-            sidedisty = (cam->pos_y -mapy) *deltadisty;
+            side_dist_y = (cam->pos_y -map_y) *delta_dist_y;
 
         }else{
             stepy =1;
-            sidedisty = (mapy + 1.0 -cam->pos_y) *deltadisty;
+            side_dist_y = (map_y + 1.0 -cam->pos_y) *delta_dist_y;
         }
 
         while(!hit){
-            if (sidedistx <sidedisty){
-                sidedistx += deltadistx;
-                mapx += stepx;
+            if (side_dist_x <side_dist_y){
+                side_dist_x += delta_dist_x;
+                map_x += stepx;
                 side =0;
             } else {
-                sidedisty += deltadisty;
-                mapy += stepy;
+                side_dist_y += delta_dist_y;
+                map_y += stepy;
                 side = 1;
             }
-            if (map[mapy*10+mapx]>0) hit = 1;
+            if (map[map_y*10+map_x]>0) hit = 1;
         } 
-        f64 perpwalldist;
+        f64 wall_dist;
         if (side == 0) {
-            perpwalldist = (sidedistx -deltadistx);
+            wall_dist = (side_dist_x -delta_dist_x);
         }else {
-            perpwalldist = (sidedisty -deltadisty);
+            wall_dist = (side_dist_y -delta_dist_y);
         }
-        i32f lineheight  = (i32f)(SCREEN_HEIGHT /perpwalldist);
+        i32f lineheight  = (i32f)(SCREEN_HEIGHT /wall_dist);
 
-        i32f drawstart = -lineheight /2 +SCREEN_HEIGHT/2;
-        if (drawstart <0) drawstart =0;
-        i32f drawend = lineheight /2 + SCREEN_HEIGHT/2;
-        if(drawend >=SCREEN_HEIGHT) drawend = SCREEN_HEIGHT-1;
+        i32f line_start = -lineheight /2 +SCREEN_HEIGHT/2;
+        if (line_start <0) line_start =0;
+        i32f line_end = lineheight /2 + SCREEN_HEIGHT/2;
+        if(line_end >=SCREEN_HEIGHT) line_end = SCREEN_HEIGHT-1;
         SDL_SetRenderDrawColor(renderer, (side?100:200),0,0,255);
-        i32f drawline_retval = SDL_RenderDrawLine(renderer, x, drawstart, x, drawend);
+        i32f drawline_retval = SDL_RenderDrawLine(renderer, x, line_start, x, line_end);
     }
     SDL_RenderPresent(renderer);
     SDL_SetRenderDrawColor(renderer, 0,0,0,255);
