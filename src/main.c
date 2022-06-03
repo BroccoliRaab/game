@@ -77,15 +77,15 @@ int main(void) {
                     loop = 0;
                     break;
                 case SDL_KEYDOWN:
-                    switch(event.key.keysym.scancode){
-                        case SDL_SCANCODE_UP:
+                    switch(event.key.keysym.sym){
+                        case SDLK_UP:
                             move_player(&main_camera, main_camera.dir_x*movespeed, main_camera.dir_y*movespeed);
                             break;
-                        case SDL_SCANCODE_DOWN:
+                        case SDLK_DOWN:
                             move_player(&main_camera, -main_camera.dir_x*movespeed, -main_camera.dir_y*movespeed);
                             break;
 
-                        case SDL_SCANCODE_RIGHT:
+                        case SDLK_RIGHT:
                             {
                                 f64 old_dir_x =main_camera.dir_x;
                                 main_camera.dir_x = main_camera.dir_x * cos(-rotspeed) -main_camera.dir_y*sin(-rotspeed);
@@ -95,7 +95,7 @@ int main(void) {
                                 main_camera.plane_y = old_plane_x * sin(-rotspeed) + main_camera.plane_y * cos(-rotspeed);
                             }
                             break;
-                        case SDL_SCANCODE_LEFT:
+                        case SDLK_LEFT:
                             {
                                 f64 old_dir_x =main_camera.dir_x;
                                 main_camera.dir_x = main_camera.dir_x * cos(rotspeed) -main_camera.dir_y*sin(rotspeed);
