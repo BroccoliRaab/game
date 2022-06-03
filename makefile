@@ -5,6 +5,7 @@ GAME=game
 
 SDL_LIBS!=sdl2-config --cflags --libs
 LIBS=-lm $(SDL_LIBS)
+CFLAGS?=-std=c17 -Wall -pedantic -Werror
 INCLUDE=-Iinclude
 
 $(GAME): $(SRC)
