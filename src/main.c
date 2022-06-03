@@ -28,6 +28,9 @@ typedef struct Camera {
 }Camera;
 
 
+void move_player(Camera *cam, f64 pos_x, f64 pos_y);
+void draw_walls(Camera *cam,SDL_Renderer *renderer, i32f map[100]);
+
 int main(void) {
     i32f buffer[100];
     FILE * f =fopen("assets/tilemap/test1.csv", "r");
@@ -76,12 +79,10 @@ int main(void) {
                 case SDL_KEYDOWN:
                     switch(event.key.keysym.scancode){
                         case SDL_SCANCODE_UP:
-                            main_camera.pos_x +=main_camera.dir_x *movespeed;
-                            main_camera.pos_y +=main_camera.dir_y *movespeed;
+                            move_player(&main_camera, main_camera.dir_x*movespeed, main_camera.dir_y*movespeed);
                             break;
                         case SDL_SCANCODE_DOWN:
-                            main_camera.pos_x -= main_camera.dir_x *movespeed;
-                            main_camera.pos_y -= main_camera.dir_y *movespeed;
+                            move_player(&main_camera, -main_camera.dir_x*movespeed, -main_camera.dir_y*movespeed);
                             break;
 
                         case SDL_SCANCODE_RIGHT:
@@ -109,75 +110,8 @@ int main(void) {
                 break;
             }
         }
-        for (i32f x =0; x<SCREEN_WIDTH; x++){
-            f64 camx =2 * (f64)x/(f64)SCREEN_WIDTH-1;
-            f64 ray_dir_x = main_camera.dir_x +main_camera.plane_x *camx;
-            f64 ray_dir_y = main_camera.dir_y +main_camera.plane_y * camx;
-            
-            i32f mapx = (i32f) main_camera.pos_x;
-            i32f mapy = (i32f) main_camera.pos_y;
-
-            f64 sidedistx;
-            f64 sidedisty;
-
-            f64 deltadistx = (ray_dir_x == 0)? 1e30 : fabs(1.0/ray_dir_x);
-            f64 deltadisty = (ray_dir_y == 0)? 1e30 : fabs(1.0/ray_dir_y);
-
-            i32f stepy, stepx;
-
-            b8 hit = 0;
-
-            i8f side;
-
-            if (ray_dir_x<0) {
-                stepx =-1;
-                sidedistx = (main_camera.pos_x -mapx) *deltadistx;
-
-            }else{
-                stepx =1;
-                sidedistx = (mapx + 1.0 -main_camera.pos_x) *deltadistx;
-            }
-            if (ray_dir_y<0) {
-                stepy =-1;
-                sidedisty = (main_camera.pos_y -mapy) *deltadisty;
-
-            }else{
-                stepy =1;
-                sidedisty = (mapy + 1.0 -main_camera.pos_y) *deltadisty;
-            }
-
-            while(!hit){
-                if (sidedistx <sidedisty){
-                    sidedistx += deltadistx;
-                    mapx += stepx;
-                    side =0;
-                } else {
-                    sidedisty += deltadisty;
-                    mapy += stepy;
-                    side = 1;
-                }
-                if (buffer[mapy*mapdim+mapx]>0) hit = 1;
-            } 
-            f64 perpwalldist;
-            if (side == 0) {
-                perpwalldist = (sidedistx -deltadistx);
-            }else {
-                perpwalldist = (sidedisty -deltadisty);
-            }
-            i32f lineheight  = (i32f)(SCREEN_HEIGHT /perpwalldist);
-
-            i32f drawstart = -lineheight /2 +SCREEN_HEIGHT/2;
-            if (drawstart <0) drawstart =0;
-            i32f drawend = lineheight /2 + SCREEN_HEIGHT/2;
-            if(drawend >=SCREEN_HEIGHT) drawend = SCREEN_HEIGHT-1;
-            SDL_SetRenderDrawColor(renderer, (side?100:200),0,0,255);
-            i32f drawline_retval = SDL_RenderDrawLine(renderer, x, drawstart, x, drawend);
-        }
-        SDL_RenderPresent(renderer);
-        SDL_SetRenderDrawColor(renderer, 0,0,0,255);
-        SDL_RenderClear(renderer);
+        draw_walls(&main_camera, renderer, buffer);
     }
-
     return 0;
 
 ERR_WIN:
@@ -187,3 +121,79 @@ ERROR:
     SDL_Quit();
     return 1;
 }
+void move_player(Camera *cam, f64 pos_x, f64 pos_y){
+    cam->pos_x+= pos_x;
+    cam->pos_y+= pos_y;
+}
+void draw_walls(Camera *cam,SDL_Renderer *renderer, i32f map[100]){
+    for (i32f x =0; x<SCREEN_WIDTH; x++){
+        f64 camx =2 * (f64)x/(f64)SCREEN_WIDTH-1;
+        f64 ray_dir_x = cam->dir_x +cam->plane_x *camx;
+        f64 ray_dir_y = cam->dir_y +cam->plane_y * camx;
+
+        i32f mapx = (i32f) cam->pos_x;
+        i32f mapy = (i32f) cam->pos_y;
+
+        f64 sidedistx;
+        f64 sidedisty;
+
+        f64 deltadistx = (ray_dir_x == 0)? 1e30 : fabs(1.0/ray_dir_x);
+        f64 deltadisty = (ray_dir_y == 0)? 1e30 : fabs(1.0/ray_dir_y);
+
+        i32f stepy, stepx;
+
+        b8 hit = 0;
+
+        i8f side;
+
+        if (ray_dir_x<0) {
+            stepx =-1;
+            sidedistx = (cam->pos_x -mapx) *deltadistx;
+
+        }else{
+            stepx =1;
+            sidedistx = (mapx + 1.0 -cam->pos_x) *deltadistx;
+        }
+        if (ray_dir_y<0) {
+            stepy =-1;
+            sidedisty = (cam->pos_y -mapy) *deltadisty;
+
+        }else{
+            stepy =1;
+            sidedisty = (mapy + 1.0 -cam->pos_y) *deltadisty;
+        }
+
+        while(!hit){
+            if (sidedistx <sidedisty){
+                sidedistx += deltadistx;
+                mapx += stepx;
+                side =0;
+            } else {
+                sidedisty += deltadisty;
+                mapy += stepy;
+                side = 1;
+            }
+            if (map[mapy*10+mapx]>0) hit = 1;
+        } 
+        f64 perpwalldist;
+        if (side == 0) {
+            perpwalldist = (sidedistx -deltadistx);
+        }else {
+            perpwalldist = (sidedisty -deltadisty);
+        }
+        i32f lineheight  = (i32f)(SCREEN_HEIGHT /perpwalldist);
+
+        i32f drawstart = -lineheight /2 +SCREEN_HEIGHT/2;
+        if (drawstart <0) drawstart =0;
+        i32f drawend = lineheight /2 + SCREEN_HEIGHT/2;
+        if(drawend >=SCREEN_HEIGHT) drawend = SCREEN_HEIGHT-1;
+        SDL_SetRenderDrawColor(renderer, (side?100:200),0,0,255);
+        i32f drawline_retval = SDL_RenderDrawLine(renderer, x, drawstart, x, drawend);
+    }
+    SDL_RenderPresent(renderer);
+    SDL_SetRenderDrawColor(renderer, 0,0,0,255);
+    SDL_RenderClear(renderer);
+}
+
+
+
