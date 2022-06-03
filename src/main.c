@@ -19,39 +19,11 @@
     }
 
 int main(void) {
-    //i32f buffer[100];
-    //FILE * f =fopen("assets/tilemap/test1.csv", "r");
-    //FATAL(!f, "Failed to open tilemap", ERROR);
+    i32f buffer[100];
+    FILE * f =fopen("assets/tilemap/test1.csv", "r");
+    FATAL(!f, "Failed to open tilemap", ERROR);
 
-    const i32f mapdim = 24;
-
-    i32f buffer[]={
-        
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-  1,0,0,0,0,0,2,2,2,2,2,0,0,0,0,3,0,3,0,3,0,0,0,1,
-  1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,1,
-  1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,3,0,0,0,3,0,0,0,1,
-  1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,1,
-  1,0,0,0,0,0,2,2,0,2,2,0,0,0,0,3,0,3,0,3,0,0,0,1,
-  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-  1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-  1,4,4,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-  1,4,0,4,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-  1,4,0,0,0,0,5,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-  1,4,0,4,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-  1,4,0,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-  1,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-  1,4,4,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-};
+    const i32f mapdim = 10;
 
     i32f sdl_init_retval = SDL_Init(SDL_INIT_EVERYTHING);
     FATAL(sdl_init_retval<0, "Failed to initialize SDL", ERROR);
@@ -64,7 +36,7 @@ int main(void) {
     FATAL(!renderer, "Failed to create renderer", ERR_WIN);
 
     //u32f tiles = load_tilemap(f, buffer, 256);
-    
+
     f64 posx = 5;
     f64 posy = 5;
     f64 dirx = -1;
@@ -74,17 +46,16 @@ int main(void) {
 
     f64 movespeed = 0.0;
     f64 rotspeed = 0.0;
-    
+
     u64f last_frame = SDL_GetTicks64();
     b8 loop = 1;
     while (loop){
         u64f curr_frame = SDL_GetTicks64();
         f64 dt = (curr_frame - last_frame) /1000.0;
-        if (dt>0)
-            last_frame = curr_frame;
+        last_frame = curr_frame;
         movespeed = dt * 5.0;
         rotspeed = dt * 3.0;
-        printf("X: %lf, Y: %lf\n", posx, posy);
+        printf("FPS: %lf\n", 1.0/dt);
         SDL_Event event;
         while (SDL_PollEvent(&event)){
             switch (event.type){
@@ -174,7 +145,7 @@ int main(void) {
                     mapy += stepy;
                     side = 1;
                 }
-                if (buffer[mapy*mapdim+mapx]>0) hit =1;
+                if (buffer[mapy*mapdim+mapx]>0) hit = 1;
             } 
             f64 perpwalldist;
             if (side == 0) {
