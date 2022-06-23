@@ -12,12 +12,6 @@
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
-#define FATAL(condition, output, label) \
-    if((condition)){                    \
-        fputs((output), stderr);        \
-        goto label;                     \
-    }
-
 typedef struct Camera {
     f64 pos_x;
     f64 pos_y;
@@ -34,26 +28,55 @@ i32f tile_from_position(i32f map[100], i32f pos_x, i32f pos_y);
 
 int main(void) {
     i32f buffer[100];
+    i32f main_ret = 0;
     FILE * f =fopen("assets/tilemap/test1.csv", "r");
-    FATAL(!f, "Failed to open tilemap", ERROR);
-
-    const i32f mapdim = 10;
+    if (!f){
+        fputs("Failed to open tilemap\n", stderr);
+        main_ret = 1;
+        goto EXIT_main;
+    }
+    u32f load_tilemap_retval = load_tilemap(f, buffer, 100);
+    if (!load_tilemap_retval){
+        fputs("Failed to open tilemap\n", stderr);
+        main_ret =1;
+        goto EXIT_main;
+    }
+    fclose(f);
 
     i32f sdl_init_retval = SDL_Init(SDL_INIT_EVERYTHING);
-    FATAL(sdl_init_retval<0, "Failed to initialize SDL", ERROR);
+    if (sdl_init_retval<0){
+        fputs("Failed to initialize SDL\n", stderr);
+        main_ret = 1;
+        goto EXIT_main;
+    }
     
     i32f ttf_init_retval = TTF_Init();
-    FATAL(ttf_init_retval<0, "Failed to initize TTF", ERROR);
+    if (ttf_init_retval<0){
+        fputs("Failed to initize TTF\n", stderr);
+        main_ret = 1;
+        goto EXIT_main;
+    }
 
     SDL_Window * win = SDL_CreateWindow(TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
-    FATAL(!win, "Failed to create window", ERR_TTF);
+    if (!win){
+        fputs("Failed to create window\n", stderr);
+        main_ret = 1;
+        goto EXIT_main;
+    }
 
     SDL_Renderer * renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
-    FATAL(!renderer, "Failed to create renderer", ERR_WIN);
-
-    u32f tiles = load_tilemap(f, buffer, 100);
+    if(!renderer) {
+        fputs("Failed to create renderer\n", stderr);
+        main_ret = 1;
+        goto EXIT_main;
+    }
 
     TTF_Font *font = TTF_OpenFont("assets/font/sans.ttf", 25);
+    if (!renderer){
+        fputs("Failed to load font\n", stderr);
+        main_ret = 1;
+        goto EXIT_main;
+    }
 
     Camera main_camera;
     
@@ -71,8 +94,7 @@ int main(void) {
     SDL_Surface *position_display;
 
     u64f last_frame = SDL_GetTicks64();
-    b8 loop = 1;
-    while (loop){
+    for (;;){
         u64f curr_frame = SDL_GetTicks64();
         f64 dt = (curr_frame - last_frame) /1000.0;
         last_frame = curr_frame;
@@ -83,7 +105,6 @@ int main(void) {
         while (SDL_PollEvent(&event)){
             switch (event.type){
                 case SDL_QUIT:
-                    loop = 0;
                     break;
             }
         }
@@ -116,21 +137,14 @@ int main(void) {
         SDL_FreeSurface(fps_counter);
     }
 
+EXIT_main:
+
     TTF_CloseFont(font);
     SDL_DestroyRenderer(renderer);
-    TTF_Quit();
-    SDL_Quit();
-    return 0;
-
-
-
-ERR_WIN:
     SDL_DestroyWindow(win);
-ERR_TTF:
     TTF_Quit();
-ERROR:
     SDL_Quit();
-    return 1;
+    return main_ret;
 }
 void move_player(Camera *cam, i32f map[100], f64 movespeed, f64 rotspeed){
     f64 pos_x =0.0;
@@ -232,6 +246,8 @@ void draw_walls(Camera *cam,SDL_Renderer *renderer, i32f map[100]){
         if(line_end >=SCREEN_HEIGHT) line_end = SCREEN_HEIGHT-1;
         SDL_SetRenderDrawColor(renderer, (side?100:200),0,0,255);
         i32f drawline_retval = SDL_RenderDrawLine(renderer, x, line_start, x, line_end);
+        if(!drawline_retval)
+            fprintf(stderr, "WARN: Failed to draw line in column %d\n", x);
         SDL_SetRenderDrawColor(renderer, 0,0,0,255);
     }
 }
