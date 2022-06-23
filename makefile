@@ -10,7 +10,7 @@ INCLUDE=-Iinclude
 
 $(GAME): $(SRC)
 	mkdir -p bin
-	$(CC) $(LIBS) -o bin/$(GAME) $(INCLUDE) $(SRC)
+	$(CC) $(SRC) $(LIBS) -o bin/$(GAME) $(INCLUDE) 
 
 clean: 
 	rm -r bin/
