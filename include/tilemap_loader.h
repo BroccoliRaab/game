@@ -5,5 +5,15 @@
 
 #include "gtypes.h"
 
-u32f load_tilemap(FILE * file, i32f * buffer, u32f buff_sz);
+typedef struct Tilemap {
+   i32f *buffer;
+   u32f size;
+   u32f size_x;
+   u32f size_y;
+
+}Tilemap;
+
+u32f load_tilemap(FILE * file, Tilemap *map);
+void free_tilemap(Tilemap *map);
+
 #endif /* TILEMAP_LOADER_H */

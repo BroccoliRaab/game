@@ -22,12 +22,12 @@ typedef struct Camera {
 }Camera;
 
 
-void move_player(Camera *cam, i32f map[100], f64 movespeed, f64 rotspeed);
-void draw_walls(Camera *cam,SDL_Renderer *renderer, i32f map[100]);
-i32f tile_from_position(i32f map[100], i32f pos_x, i32f pos_y);
+void move_player(Camera *cam, Tilemap *map, f64 movespeed, f64 rotspeed);
+void draw_walls(Camera *cam,SDL_Renderer *renderer, Tilemap *map);
+i32f tile_from_position(Tilemap *map, i32f pos_x, i32f pos_y);
 
 int main(void) {
-    i32f buffer[100];
+    Tilemap map;
     i32f main_ret = 0;
     FILE * f =fopen("assets/tilemap/test1.csv", "r");
     if (!f){
@@ -35,8 +35,8 @@ int main(void) {
         main_ret = 1;
         goto EXIT_main;
     }
-    u32f load_tilemap_retval = load_tilemap(f, buffer, 100);
-    if (!load_tilemap_retval){
+    u32f tiles = load_tilemap(f, &map);
+    if (!tiles){
         fputs("Failed to open tilemap\n", stderr);
         main_ret =1;
         goto EXIT_main;
@@ -108,8 +108,8 @@ int main(void) {
                     break;
             }
         }
-        move_player(&main_camera, buffer, movespeed, rotspeed);
-        draw_walls(&main_camera, renderer, buffer);
+        move_player(&main_camera, &map, movespeed, rotspeed);
+        draw_walls(&main_camera, renderer, &map);
 
         char fps_str[20];
         char pos_str[25];
@@ -144,9 +144,10 @@ EXIT_main:
     SDL_DestroyWindow(win);
     TTF_Quit();
     SDL_Quit();
+    free_tilemap(&map);
     return main_ret;
 }
-void move_player(Camera *cam, i32f map[100], f64 movespeed, f64 rotspeed){
+void move_player(Camera *cam, Tilemap *map, f64 movespeed, f64 rotspeed){
     f64 pos_x =0.0;
     f64 pos_y =0.0;
     const u8 *keyboard = SDL_GetKeyboardState(NULL);
@@ -182,7 +183,7 @@ void move_player(Camera *cam, i32f map[100], f64 movespeed, f64 rotspeed){
     cam->pos_x+= pos_x;
     cam->pos_y+= pos_y;
 }
-void draw_walls(Camera *cam,SDL_Renderer *renderer, i32f map[100]){
+void draw_walls(Camera *cam,SDL_Renderer *renderer, Tilemap *map){
     for (i32f x =0; x<SCREEN_WIDTH; x++){
         f64 cam_x =2 * (f64)x/(f64)SCREEN_WIDTH-1;
         f64 ray_dir_x = cam->dir_x +cam->plane_x *cam_x;
@@ -254,6 +255,6 @@ void draw_walls(Camera *cam,SDL_Renderer *renderer, i32f map[100]){
 
 
 
-i32f tile_from_position(i32f map[100],i32f pos_x, i32f pos_y){
-    return map[pos_y*10+pos_x];
+i32f tile_from_position(Tilemap *map,i32f pos_x, i32f pos_y){
+    return map->buffer[pos_y*(map->size_x)+pos_x];
 }
